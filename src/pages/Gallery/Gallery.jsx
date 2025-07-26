@@ -50,7 +50,7 @@ const Gallery = () => {
   const forceDownload = async (url, filename) => {
     try {
       // Étape 1: Récupérer l'image comme blob
-      const response = await fetch(url);
+      const response = await fetch(url, { mode: 'no-cors' });
       const blob = await response.blob();
       
       // Étape 2: Créer un lien de téléchargement
