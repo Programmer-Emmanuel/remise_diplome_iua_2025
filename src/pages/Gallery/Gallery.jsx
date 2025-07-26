@@ -25,9 +25,11 @@ const Gallery = () => {
         if (status === 1 && Array.isArray(data)) {
           setPhotos(data.map(photo => ({
             id: photo.id,
-            url: photo.image_url.startsWith('http') ? photo.image_url : `https://image.msgroupe.tech/storage/${photo.image_url}`,
+            imageUrl: photo.image_url,
+            downloadUrl: photo.download_url,
             title: `Photo ${photo.id}`,
-            createdAt: photo.created_at
+            createdAt: photo.created_at,
+            extension: photo.image_url.split('.').pop().toLowerCase()
           })));
         } else {
           throw new Error(message || "Format de données inattendu");
@@ -45,39 +47,6 @@ const Gallery = () => {
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
-  };
-
-  const forceDownload = async (url, filename) => {
-    try {
-      // Étape 1: Récupérer l'image comme blob
-      const response = await fetch(url, { mode: 'no-cors' });
-      const blob = await response.blob();
-      
-      // Étape 2: Créer un lien de téléchargement
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      
-      // Déterminer l'extension du fichier
-      const extension = url.split('.').pop().split(/[#?]/)[0].toLowerCase();
-      const validExtensions = ['jpg', 'jpeg', 'png', 'gif'];
-      const fileExt = validExtensions.includes(extension) ? extension : 'jpg';
-      
-      link.download = filename || `photo-${Date.now()}.${fileExt}`;
-      document.body.appendChild(link);
-      link.click();
-      
-      // Nettoyage
-      setTimeout(() => {
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(blobUrl);
-      }, 100);
-      
-    } catch (error) {
-      console.error('Échec du téléchargement:', error);
-      // Fallback: Ouverture dans un nouvel onglet si le téléchargement échoue
-      window.open(url, '_blank');
-    }
   };
 
   const filteredPhotos = photos.filter(photo => 
@@ -154,7 +123,7 @@ const Gallery = () => {
               <div key={photo.id} className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                 <div className="relative h-60 bg-gray-100">
                   <img 
-                    src={photo.url} 
+                    src={photo.imageUrl} 
                     alt={photo.title}
                     className="w-full h-full object-contain"
                     loading="lazy"
@@ -170,13 +139,14 @@ const Gallery = () => {
                   <p className="text-sm text-gray-500 mt-1">
                     {new Date(photo.createdAt).toLocaleDateString('fr-FR')}
                   </p>
-                  <button
-                    onClick={() => forceDownload(photo.url, `diplome-${photo.id}.${photo.url.split('.').pop()}`)}
+                  <a
+                    href={photo.downloadUrl}
+                    download={`diplome-${photo.id}.${photo.extension}`}
                     className="mt-3 w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Télécharger
-                  </button>
+                  </a>
                 </div>
               </div>
             ))}
